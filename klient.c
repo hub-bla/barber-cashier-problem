@@ -28,16 +28,94 @@ struct client {
 };
 
 
+void make_money(int *money, const int *nominals, int work_count);
+
+bool can_sit(int num_clients_mutex_id, volatile int* num_clients);
+
+void inform_barber(int wr_id, int* money,  int c_id);
+
+void wait_for_change(int wr_id, int *money,  int c_id);
+
+void print_action(char* text, int c_id);
+
+
+int main(int argc, char* argv[]){
+    srand(time(NULL));
+    // [1's, 2's, 5's, amount]
+    int money[COUNTER] = {0,0,0,0};
+    int nominals[COUNTER-1] = {1,2,5};
+
+    int wr_id, num_clients_mutex_id, clients_id;
+    int c_id;
+    volatile int* num_clients;
+    c_id = atoi(argv[1]);
+
+    wr_id = msgget(KEY_WAITING_ROOM, IPC_CREAT|0600);
+    if (wr_id == -1) {
+        perror("Create waiting room error");
+        exit(1);
+    }
+
+
+    num_clients_mutex_id = semget(KEY_CLIENTS, 1, IPC_CREAT|0600);
+    if (num_clients_mutex_id == -1) {
+        perror("Create mutex for number of clients in waiting room error");
+        exit(1);
+    }
+    if (semctl(num_clients_mutex_id, 0, SETVAL, 1) == -1){
+        perror("Set num_client mutex to 1 error");
+        exit(1);
+    }
+
+
+    clients_id = shmget(KEY_CLIENTS, sizeof(int), IPC_CREAT|0600);
+    if (clients_id == -1) {
+        perror("Create number of clients shared memory error");
+        exit(1);
+    }
+
+    num_clients = (int*)shmat(clients_id, NULL, 0);
+    if (num_clients == NULL) {
+        perror("Attach counter error");
+        exit(1);
+    }
+
+
+    while (true){
+
+        make_money(money, nominals,0);
+        print_action("Money earned", c_id);
+
+        if (can_sit(num_clients_mutex_id, num_clients) ==  false){
+            print_action("Cannot sit", c_id);
+            usleep(200);
+            continue;
+        }
+
+        inform_barber(wr_id, money, c_id);
+        print_action("Barber informed", c_id);
+
+        wait_for_change(wr_id, money, c_id);
+        print_action("Money received", c_id);
+
+    }
+    return 0;
+}
+
+void print_action(char* text, int c_id){
+    printf("Client %d: %s\n", c_id, text);
+}
+
 void make_money(int *money, const int *nominals, int work_count){
-    printf("%d\n", work_count);
+    int work_time = rand() % 1000;
     int idx =  rand()%3;
-    printf("idx: %d\n", idx);
+    usleep(work_time);
     money[idx] += 1;
     money[COUNTER-1] += nominals[idx];
 
-    printf("1's: %d 2's: %d 5's: %d SUM: %d\n", money[0],money[1],money[2],money[3]);
     // there is 50% chance to earn more money
-    if (work_count < 10) if (rand()>0.5) make_money(money,  nominals, work_count+1);
+    float prob = rand();
+    if (work_count < 1) if (prob>0.5) make_money(money,  nominals, work_count+1);
 
 }
 
@@ -60,103 +138,28 @@ void inform_barber(int wr_id, int* money, int c_id){
     arival.mtype = CLIENT_PRESENT;
     for (int i = 0; i<COUNTER; i++) {
         arival.clients_money[i] = money[i];
-        printf("MONEY SEND TO BARBER %d\n", arival.clients_money[i]);
         money[i] = 0;
     }
-    printf("SUM %d\n", arival.clients_money[COUNTER-1]);
+
     arival.clients_id = c_id;
 
     if (msgsnd(wr_id, &arival, (sizeof(struct client) - sizeof(long)), 0) == -1){
         perror("Inform barber error");
         exit(1);
     }
-
-
 }
 
 
 void wait_for_change(int wr_id, int *money, int c_id){
-    struct client recieved_money;
+    struct client received_money;
 
-    if (msgrcv(wr_id,&recieved_money, (sizeof(struct client) - sizeof(long)), c_id, 0) == -1){
+    if (msgrcv(wr_id,&received_money, (sizeof(struct client) - sizeof(long)), c_id, 0) == -1){
         perror("Receiving money error");
         exit(1);
     }
 
     for (int i = 0; i<COUNTER; i++){
-        money[i] = recieved_money.clients_money[i];
+        money[i] = received_money.clients_money[i];
     }
-
-}
-
-int main(int argc, char* argv[]){
-    srand(time(NULL));
-    // [1's, 2's, 5's, amount]
-    int money[COUNTER] = {0,0,0,0};
-    int nominals[COUNTER-1] = {1,2,5};
-
-    int wr_id, num_clients_mutex_id, clients_id, c_id;
-    volatile int* num_clients;
-
-    c_id = 10;
-    printf("CLIENT ID: %d, Made some money", c_id);
-
-    wr_id = msgget(KEY_WAITING_ROOM, IPC_CREAT|0600);
-    if (wr_id == -1) {
-        perror("Create waiting room error");
-        exit(1);
-    }
-
-
-    num_clients_mutex_id = semget(KEY_CLIENTS, 1, IPC_CREAT|0600);
-    if (num_clients_mutex_id == -1) {
-        perror("Create mutex for number of clients in waiting room error");
-        exit(1);
-    }
-
-    if (semctl(num_clients_mutex_id, 0, SETVAL, 1) == -1){
-        perror("Set num_client mutex to 1 error");
-        exit(1);
-    }
-
-    clients_id = shmget(KEY_CLIENTS, sizeof(int), IPC_CREAT|0600);
-    if (clients_id == -1) {
-        perror("Create number of clients shared memory error");
-        exit(1);
-    }
-
-    num_clients = (int*)shmat(clients_id, NULL, 0);
-    if (num_clients == NULL) {
-        perror("Attach counter error");
-        exit(1);
-    }
-
-    while (true){
-        printf("Start client\n");
-
-        //make money
-
-        make_money(money, nominals,0);
-
-        // go to barber shop
-        if (can_sit(num_clients_mutex_id, num_clients) ==  false){
-            printf("Cannot sit\n");
-            continue;
-        }
-
-        inform_barber(wr_id, money, c_id);
-        printf("Barber informed\n");
-
-        wait_for_change(wr_id, money, c_id);
-        printf("Money received\n");
-
-    }
-    // how message queue will work
-    // client sends that is waiting in the waiting room
-    // then it will wait for the barber will receive that
-    // barber will pick a chair, do the haircut, and while that client will be waiting for the barber
-    // to give him the change through message with the unique client id that was sent earlier with money
-
-    return 0;
 
 }
