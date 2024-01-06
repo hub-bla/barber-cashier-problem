@@ -313,7 +313,6 @@ void count_change(int change,  int clients_money[COUNTER],
     int change_banknotes[COUNTER];
     for (int i = 0; i < COUNTER; i++) change_banknotes[i]=0;
 
-
     int temp_change = change;
 
     // only one barber can perform active waiting
