@@ -67,8 +67,8 @@ build CMakeFiles/fryzjerzy_kasjerzy.dir/fryzjerzy_klient.c.o: C_COMPILER__fryzje
   OBJECT_DIR = CMakeFiles/fryzjerzy_kasjerzy.dir
   OBJECT_FILE_DIR = CMakeFiles/fryzjerzy_kasjerzy.dir
 
-build CMakeFiles/fryzjerzy_kasjerzy.dir/semaphore_ops.c.o: C_COMPILER__fryzjerzy_kasjerzy_unscanned_Debug /home/hubert/CLionProjects/fryzjerzy-kasjerzy/semaphore_ops.c || cmake_object_order_depends_target_fryzjerzy_kasjerzy
-  DEP_FILE = CMakeFiles/fryzjerzy_kasjerzy.dir/semaphore_ops.c.o.d
+build CMakeFiles/fryzjerzy_kasjerzy.dir/fryzjerzy_semaphore_ops.c.o: C_COMPILER__fryzjerzy_kasjerzy_unscanned_Debug /home/hubert/CLionProjects/fryzjerzy-kasjerzy/fryzjerzy_semaphore_ops.c || cmake_object_order_depends_target_fryzjerzy_kasjerzy
+  DEP_FILE = CMakeFiles/fryzjerzy_kasjerzy.dir/fryzjerzy_semaphore_ops.c.o.d
   FLAGS = -g -std=gnu11 -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles/fryzjerzy_kasjerzy.dir
   OBJECT_FILE_DIR = CMakeFiles/fryzjerzy_kasjerzy.dir
@@ -81,7 +81,7 @@ build CMakeFiles/fryzjerzy_kasjerzy.dir/semaphore_ops.c.o: C_COMPILER__fryzjerzy
 #############################################
 # Link the executable fryzjerzy_kasjerzy
 
-build fryzjerzy_kasjerzy: C_EXECUTABLE_LINKER__fryzjerzy_kasjerzy_Debug CMakeFiles/fryzjerzy_kasjerzy.dir/fryzjerzy_main.c.o CMakeFiles/fryzjerzy_kasjerzy.dir/fryzjerzy_fryzjer.c.o CMakeFiles/fryzjerzy_kasjerzy.dir/fryzjerzy_klient.c.o CMakeFiles/fryzjerzy_kasjerzy.dir/semaphore_ops.c.o
+build fryzjerzy_kasjerzy: C_EXECUTABLE_LINKER__fryzjerzy_kasjerzy_Debug CMakeFiles/fryzjerzy_kasjerzy.dir/fryzjerzy_main.c.o CMakeFiles/fryzjerzy_kasjerzy.dir/fryzjerzy_fryzjer.c.o CMakeFiles/fryzjerzy_kasjerzy.dir/fryzjerzy_klient.c.o CMakeFiles/fryzjerzy_kasjerzy.dir/fryzjerzy_semaphore_ops.c.o
   FLAGS = -g
   OBJECT_DIR = CMakeFiles/fryzjerzy_kasjerzy.dir
   POST_BUILD = :
