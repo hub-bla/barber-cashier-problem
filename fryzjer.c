@@ -157,7 +157,7 @@ int main(int argc, char* argv[]) {
 
 
         int price = determine_price(wr_spot.clients_money, counter);
-        sleep(1);
+//        sleep(1);
         // pick needed enough money from client
         int money_for_service[COUNTER];
         for (int i = 0; i< COUNTER; i++) money_for_service[i] = 0;
@@ -195,9 +195,6 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-// get ass close as possible to diff 0
-// the last element if the diff is 0 then and that
-// if its negavtive diff then try to find the way to minimize that negative
 
 
 void take_money_from_client(int clients_money[COUNTER], int paid_money[COUNTER], int price){
@@ -324,7 +321,7 @@ void count_change(int change,  int clients_money[COUNTER],
         || (can_change(change_banknotes, counter_sem_id, counter, &temp_change)==false)){
 
 
-        // TODO: idk if this sem for reading is needed
+        // idk if this sem for reading is needed
         // for now i think in help so that not more than one semaphore is waiting for acquiring the counter
 
         reduce(counter_sem_id, 1);
@@ -341,6 +338,7 @@ void count_change(int change,  int clients_money[COUNTER],
             printf("Clients money %d %d %d %d\n", clients_money[0],clients_money[1],clients_money[2],clients_money[3]);
             printf("Second condition %d\n", (can_change(change_banknotes, counter_sem_id, counter, &temp_change) ==  false));
             sleep(1);
+
             temp_change = change;
         }
         increase(counter_sem_id, 1);

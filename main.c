@@ -7,8 +7,8 @@
 
 #define COUNTER 4
 #define KEY_COUNTER 45281
-#define BARBERS 2
-#define CLIENTS 3
+#define BARBERS 5
+#define CLIENTS 4
 
 
 
