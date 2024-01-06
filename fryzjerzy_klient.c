@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <stdlib.h>
-#include "semaphore_ops.h"
+#include "fryzjerzy_semaphore_ops.h"
 
 #define COUNTER 4
 #define KEY_COUNTER 45281
@@ -17,8 +17,9 @@
 #define KEY_WAITING_ROOM 45283
 #define NUM_CHAIRS 2
 #define KEY_CLIENTS 45284
+// number of clients in the waiting room
 #define NUM_CLIENTS 1
-//through main we will give client ids
+
 #define CLIENT_PRESENT 1
 
 struct client {
@@ -115,7 +116,7 @@ void make_money(int *money, const int *nominals, int work_count){
 
     // there is 50% chance to earn more money
     float prob = rand();
-    if (work_count < 1) if (prob>0.5) make_money(money,  nominals, work_count+1);
+    if (work_count < 2) if (prob>0.5) make_money(money,  nominals, work_count+1);
 
 }
 

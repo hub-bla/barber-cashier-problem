@@ -1,4 +1,4 @@
-#include "semaphore_ops.h"
+#include "fryzjerzy_semaphore_ops.h"
 
 static struct sembuf buf;
 

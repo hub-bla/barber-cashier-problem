@@ -2,7 +2,6 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/shm.h>
-#include <unistd.h>
 #include <stdlib.h>
 
 #define COUNTER 4
@@ -13,8 +12,6 @@
 
 
 int main(int argc, char* argv[]) {
-    // initialize counter
-//    int nominals[COUNTER] = {1,2,5};
     int counter_id;
     counter_id = shmget(KEY_COUNTER, (COUNTER)*sizeof(int), IPC_CREAT|0600);
     if (counter_id == -1) {

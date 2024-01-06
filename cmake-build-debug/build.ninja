@@ -49,20 +49,20 @@ cmake_ninja_workdir = /home/hubert/CLionProjects/fryzjerzy-kasjerzy/cmake-build-
 
 build cmake_object_order_depends_target_fryzjerzy_kasjerzy: phony || CMakeFiles/fryzjerzy_kasjerzy.dir
 
-build CMakeFiles/fryzjerzy_kasjerzy.dir/main.c.o: C_COMPILER__fryzjerzy_kasjerzy_unscanned_Debug /home/hubert/CLionProjects/fryzjerzy-kasjerzy/main.c || cmake_object_order_depends_target_fryzjerzy_kasjerzy
-  DEP_FILE = CMakeFiles/fryzjerzy_kasjerzy.dir/main.c.o.d
+build CMakeFiles/fryzjerzy_kasjerzy.dir/fryzjerzy_main.c.o: C_COMPILER__fryzjerzy_kasjerzy_unscanned_Debug /home/hubert/CLionProjects/fryzjerzy-kasjerzy/fryzjerzy_main.c || cmake_object_order_depends_target_fryzjerzy_kasjerzy
+  DEP_FILE = CMakeFiles/fryzjerzy_kasjerzy.dir/fryzjerzy_main.c.o.d
   FLAGS = -g -std=gnu11 -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles/fryzjerzy_kasjerzy.dir
   OBJECT_FILE_DIR = CMakeFiles/fryzjerzy_kasjerzy.dir
 
-build CMakeFiles/fryzjerzy_kasjerzy.dir/fryzjer.c.o: C_COMPILER__fryzjerzy_kasjerzy_unscanned_Debug /home/hubert/CLionProjects/fryzjerzy-kasjerzy/fryzjer.c || cmake_object_order_depends_target_fryzjerzy_kasjerzy
-  DEP_FILE = CMakeFiles/fryzjerzy_kasjerzy.dir/fryzjer.c.o.d
+build CMakeFiles/fryzjerzy_kasjerzy.dir/fryzjerzy_fryzjer.c.o: C_COMPILER__fryzjerzy_kasjerzy_unscanned_Debug /home/hubert/CLionProjects/fryzjerzy-kasjerzy/fryzjerzy_fryzjer.c || cmake_object_order_depends_target_fryzjerzy_kasjerzy
+  DEP_FILE = CMakeFiles/fryzjerzy_kasjerzy.dir/fryzjerzy_fryzjer.c.o.d
   FLAGS = -g -std=gnu11 -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles/fryzjerzy_kasjerzy.dir
   OBJECT_FILE_DIR = CMakeFiles/fryzjerzy_kasjerzy.dir
 
-build CMakeFiles/fryzjerzy_kasjerzy.dir/klient.c.o: C_COMPILER__fryzjerzy_kasjerzy_unscanned_Debug /home/hubert/CLionProjects/fryzjerzy-kasjerzy/klient.c || cmake_object_order_depends_target_fryzjerzy_kasjerzy
-  DEP_FILE = CMakeFiles/fryzjerzy_kasjerzy.dir/klient.c.o.d
+build CMakeFiles/fryzjerzy_kasjerzy.dir/fryzjerzy_klient.c.o: C_COMPILER__fryzjerzy_kasjerzy_unscanned_Debug /home/hubert/CLionProjects/fryzjerzy-kasjerzy/fryzjerzy_klient.c || cmake_object_order_depends_target_fryzjerzy_kasjerzy
+  DEP_FILE = CMakeFiles/fryzjerzy_kasjerzy.dir/fryzjerzy_klient.c.o.d
   FLAGS = -g -std=gnu11 -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles/fryzjerzy_kasjerzy.dir
   OBJECT_FILE_DIR = CMakeFiles/fryzjerzy_kasjerzy.dir
@@ -81,7 +81,7 @@ build CMakeFiles/fryzjerzy_kasjerzy.dir/semaphore_ops.c.o: C_COMPILER__fryzjerzy
 #############################################
 # Link the executable fryzjerzy_kasjerzy
 
-build fryzjerzy_kasjerzy: C_EXECUTABLE_LINKER__fryzjerzy_kasjerzy_Debug CMakeFiles/fryzjerzy_kasjerzy.dir/main.c.o CMakeFiles/fryzjerzy_kasjerzy.dir/fryzjer.c.o CMakeFiles/fryzjerzy_kasjerzy.dir/klient.c.o CMakeFiles/fryzjerzy_kasjerzy.dir/semaphore_ops.c.o
+build fryzjerzy_kasjerzy: C_EXECUTABLE_LINKER__fryzjerzy_kasjerzy_Debug CMakeFiles/fryzjerzy_kasjerzy.dir/fryzjerzy_main.c.o CMakeFiles/fryzjerzy_kasjerzy.dir/fryzjerzy_fryzjer.c.o CMakeFiles/fryzjerzy_kasjerzy.dir/fryzjerzy_klient.c.o CMakeFiles/fryzjerzy_kasjerzy.dir/semaphore_ops.c.o
   FLAGS = -g
   OBJECT_DIR = CMakeFiles/fryzjerzy_kasjerzy.dir
   POST_BUILD = :

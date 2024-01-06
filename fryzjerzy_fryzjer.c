@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <stdlib.h>
-#include "semaphore_ops.h"
+#include "fryzjerzy_semaphore_ops.h"
 #define COUNTER 4
 
 #define KEY_COUNTER 45281
@@ -289,7 +289,6 @@ bool can_change(int change_banknotes[COUNTER], int counter_sem_id, volatile int*
     }
 
     // return money to the counter if the barber couldn't return full change
-    increase(counter_sem_id, 0);
 
     if (*change != 0){
         for (int i = 0; i < (COUNTER-1); i++){
@@ -298,8 +297,10 @@ bool can_change(int change_banknotes[COUNTER], int counter_sem_id, volatile int*
             change_banknotes[i] = 0;
         }
         change_banknotes[COUNTER-1] = 0;
+        increase(counter_sem_id, 0);
         return false;
     }
+    increase(counter_sem_id, 0);
 
     return true;
 }
