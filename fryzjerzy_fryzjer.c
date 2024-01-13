@@ -7,7 +7,6 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <time.h>
-#include <stdlib.h>
 #include "fryzjerzy_semaphore_ops.h"
 #define COUNTER 4
 
@@ -16,11 +15,13 @@
 #define KEY_WAITING_ROOM 45283
 #define KEY_CLIENTS 45284
 
-#define NUM_CHAIRS 2
-#define NUM_CLIENTS 1
+#define NUM_CHAIRS 5
+#define NUM_CLIENTS 10
 
 #define CLIENT_PRESENT 1
 
+
+#define DELAY 10000
 
 // waiting room spot
 struct client {
@@ -161,10 +162,11 @@ int main(int argc, char* argv[]) {
         // pick needed enough money from client
         int money_for_service[COUNTER];
         for (int i = 0; i< COUNTER; i++) money_for_service[i] = 0;
-
+        printf("Barber %d Check clients money before %d %d %d %d\n", barber_id,wr_spot.clients_money[0],wr_spot.clients_money[1],wr_spot.clients_money[2],wr_spot.clients_money[3]);
+        printf("Barber %d Price %d\n", barber_id,price);
         take_money_from_client(wr_spot.clients_money, money_for_service, price);
 
-        printf("Check clients money %d %d %d %d\n", wr_spot.clients_money[0],wr_spot.clients_money[1],wr_spot.clients_money[2],wr_spot.clients_money[3]);
+        printf("Barber %d Check clients money after %d %d %d %d\n", barber_id, wr_spot.clients_money[0],wr_spot.clients_money[1],wr_spot.clients_money[2],wr_spot.clients_money[3]);
         put_in_counter(counter, money_for_service);
         cut_hair(price);
         // free chair
@@ -190,6 +192,8 @@ int main(int argc, char* argv[]) {
 
         give_money_to_client(wr_spot.clients_id, wr_spot.clients_money, wr_id);
         print_action("Money gave to a client", barber_id);
+        int r = (rand()%DELAY)+1;
+        usleep(r);
     }
 
     return 0;
@@ -202,8 +206,7 @@ void take_money_from_client(int clients_money[COUNTER], int paid_money[COUNTER],
     int temp_price = price;
     int end_picks[COUNTER-1] = {0,0,0};
     int distances[COUNTER-1] = {1, 1 ,1};
-//    printf("Clients money %d %d %d %d\n", clients_money[0],clients_money[1],clients_money[2],clients_money[3]);
-//    printf("PRICE: %d\n", price);
+
     for (int i =COUNTER-2; i>=0; i--){
         while ((clients_money[i]>0)&&((temp_price-nominals[i])>=0)){
             temp_price -= nominals[i];
@@ -213,7 +216,7 @@ void take_money_from_client(int clients_money[COUNTER], int paid_money[COUNTER],
             paid_money[COUNTER-1] += nominals[i];
         }
     }
-//    printf("TEMP PRICE %d\n", temp_price);
+
     if (temp_price == 0) return;
 
     int min_idx = COUNTER-2;
@@ -236,18 +239,13 @@ void take_money_from_client(int clients_money[COUNTER], int paid_money[COUNTER],
 
     clients_money[min_idx] -= end_picks[min_idx];
     clients_money[COUNTER-1] -= (nominals[min_idx]* end_picks[min_idx]);
-//    printf("Clients money %d %d %d %d\n", clients_money[0],clients_money[1],clients_money[2],clients_money[3]);
-//    printf("Distances %d %d %d\n", distances[0],distances[1],distances[2]);
-//    printf("End picks %d %d %d\n", end_picks[0],end_picks[1],end_picks[2]);
-//    printf("PRICE: %d\n", price);
 
     // now we know how much and what should we choose to be the closest to the price
 
     paid_money[min_idx] += end_picks[min_idx];
 
     paid_money[COUNTER-1] += (nominals[min_idx]* end_picks[min_idx]);
-//    printf("Paid money %d %d %d %d\n", paid_money[0],paid_money[1],paid_money[2],paid_money[3]);
-//    sleep(1);
+
 
 }
 
@@ -263,7 +261,7 @@ void print_action(char* text, int barber_id){
 int determine_price(const int* clients_money, const volatile int* counter){
     int clients_amount = clients_money[COUNTER-1];
 
-    int price = counter[COUNTER-1] > clients_amount ?  ((rand()+1 )% (clients_amount)) : ((rand()+1) % (counter[COUNTER-1]));
+    int price = counter[COUNTER-1] > clients_amount ?  ((rand()%clients_amount)+1) : ((rand() % counter[COUNTER-1])+1);
 
     return price;
 }
@@ -320,9 +318,6 @@ void count_change(int change,  int clients_money[COUNTER],
     if (counter[COUNTER-1] < clients_money[COUNTER-1]
         || (can_change(change_banknotes, counter_sem_id, counter, &temp_change)==false)){
 
-
-        // idk if this sem for reading is needed
-        // for now i think in help so that not more than one semaphore is waiting for acquiring the counter
 
         reduce(counter_sem_id, 1);
         temp_change = change;

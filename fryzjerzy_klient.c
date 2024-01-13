@@ -18,9 +18,12 @@
 #define NUM_CHAIRS 2
 #define KEY_CLIENTS 45284
 // number of clients in the waiting room
-#define NUM_CLIENTS 1
+#define NUM_CLIENTS 10
 
 #define CLIENT_PRESENT 1
+
+
+#define DELAY 10000
 
 struct client {
     long mtype;
@@ -98,7 +101,8 @@ int main(int argc, char* argv[]){
 
         wait_for_change(wr_id, money, c_id);
         print_action("Money received", c_id);
-
+        int r = (rand()%DELAY)+1;
+        usleep(r);
     }
     return 0;
 }

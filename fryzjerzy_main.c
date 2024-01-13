@@ -6,9 +6,12 @@
 
 #define COUNTER 4
 #define KEY_COUNTER 45281
-#define BARBERS 5
-#define CLIENTS 4
+#define BARBERS 10
+#define CLIENTS 20
 
+#define BASE_ONES 5
+#define BASE_TWOS 5
+#define  BASE_FIVES 5
 
 
 int main(int argc, char* argv[]) {
@@ -24,10 +27,10 @@ int main(int argc, char* argv[]) {
         perror("Attach counter error");
         exit(1);
     }
-    counter[0] = 1;
-    counter[1] = 1;
-    counter[2] = 1;
-    counter[3] = 1+2+5;
+    counter[0] = BASE_ONES;
+    counter[1] = BASE_TWOS;
+    counter[2] = BASE_FIVES;
+    counter[3] = (BASE_ONES*1)+(BASE_TWOS*2)+(BASE_FIVES*5);
     shmdt((void *)counter);
 
     for (int i = 10; i < (BARBERS+10); i++) {
