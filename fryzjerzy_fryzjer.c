@@ -36,8 +36,7 @@ void cut_hair(int price);
 void put_in_counter(volatile int * counter, const int money_for_service[COUNTER]);
 bool can_change(int change_banknotes[COUNTER], int counter_sem_id, volatile int* counter, int *change);
 
-//TODO: check what will happen if the counter will be allowed to used by other barber
-// while the barber which freed the counter will start to drop money to counter concurrently
+
 void count_change(int change,  int clients_money[COUNTER],
                   volatile int* counter,
                   int counter_sem_id,
@@ -138,9 +137,7 @@ int main(int argc, char* argv[]) {
     // message queue
 
     while (true) {
-        //if we get a msg from queue we need to already have a chair for client
-        // because it will be removed from queue after receiving the message
-        // pick client from waiting room
+
         print_action("Waiting for a client", barber_id);
 
         if (msgrcv(wr_id,&wr_spot, (sizeof(struct client) - sizeof(long)), CLIENT_PRESENT, 0) == -1){
