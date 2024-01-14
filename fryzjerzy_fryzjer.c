@@ -17,7 +17,7 @@
 
 #define NUM_CHAIRS 5
 #define NUM_CLIENTS 10
-
+// number of clients in the waiting room
 #define CLIENT_PRESENT 1
 
 
@@ -139,17 +139,17 @@ int main(int argc, char* argv[]) {
     while (true) {
 
         print_action("Waiting for a client", barber_id);
-
+        //pick client
         if (msgrcv(wr_id,&wr_spot, (sizeof(struct client) - sizeof(long)), CLIENT_PRESENT, 0) == -1){
             perror("Checking waiting room error");
             exit(1);
         }
         print_action("Picked client", barber_id);
+        sleep(1);
 
         reduce(num_clients_mutex_id, 0);
         *num_clients-=1;
         increase(num_clients_mutex_id,0);
-
         // find free chair
         reduce(ch_id, 0);
 
@@ -257,9 +257,8 @@ void print_action(char* text, int barber_id){
 
 int determine_price(const int* clients_money, const volatile int* counter){
     int clients_amount = clients_money[COUNTER-1];
-
-    int price = counter[COUNTER-1] > clients_amount ?  ((rand()%clients_amount)+1) : ((rand() % counter[COUNTER-1])+1);
-
+    // when counter has no money it would create error  when rand() % (counter[COUNTER-1])
+    int price = counter[COUNTER-1] > clients_amount ?  ((rand()%clients_amount)+1) : ((rand() % (counter[COUNTER-1]+1))+1);
     return price;
 }
 

@@ -6,12 +6,12 @@
 
 #define COUNTER 4
 #define KEY_COUNTER 45281
-#define BARBERS 10
-#define CLIENTS 20
+#define BARBERS 1
+#define CLIENTS 1
 
-#define BASE_ONES 5
-#define BASE_TWOS 5
-#define  BASE_FIVES 5
+#define BASE_ONES 0
+#define BASE_TWOS 0
+#define  BASE_FIVES 0
 
 
 int main(int argc, char* argv[]) {
