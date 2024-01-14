@@ -6,8 +6,8 @@
 
 #define COUNTER 4
 #define KEY_COUNTER 45281
-#define BARBERS 1
-#define CLIENTS 1
+#define BARBERS 10
+#define CLIENTS 5
 
 #define BASE_ONES 0
 #define BASE_TWOS 0

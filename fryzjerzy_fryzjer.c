@@ -145,7 +145,6 @@ int main(int argc, char* argv[]) {
             exit(1);
         }
         print_action("Picked client", barber_id);
-        sleep(1);
 
         reduce(num_clients_mutex_id, 0);
         *num_clients-=1;
