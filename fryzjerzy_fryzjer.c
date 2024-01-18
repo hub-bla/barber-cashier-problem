@@ -8,17 +8,23 @@
 #include <unistd.h>
 #include <time.h>
 #include "fryzjerzy_semaphore_ops.h"
+
 #define COUNTER 4
 
 #define KEY_COUNTER 45281
 #define KEY_CHAIRS 45282
 #define KEY_WAITING_ROOM 45283
 #define KEY_CLIENTS 45284
+#define KEY_CHANGE_QUEUE 46283
+#define KEY_DEBTS 45321
+#define NUM_WAITING_BARBERS_KEY 46271
+#define WAITING_BARBERS_QUEUE_KEY  47271
 
-#define NUM_CHAIRS 5
-#define NUM_CLIENTS 10
+
+#define NUM_CHAIRS 1
+
 // number of clients in the waiting room
-#define CLIENT_PRESENT 1
+#define NUM_CLIENTS 2
 
 
 #define DELAY 10000
@@ -30,17 +36,24 @@ struct client {
     int clients_id;
 };
 
-int determine_price(const int* clients_money, const volatile int* counter);
+struct change_wait {
+    long mtype;
+};
+
+int determine_price(const int* clients_money, const volatile int* counter, volatile int * debts, int clients_id,int barber_id);
 
 void cut_hair(int price);
-void put_in_counter(volatile int * counter, const int money_for_service[COUNTER]);
+void put_in_counter(volatile int * counter, const int money_for_service[COUNTER], int counter_sem_id,
+                    int waiting_barbers_mutex, int volatile *waiting_barbers_num, int waiting_barbers_queue_id);
 bool can_change(int change_banknotes[COUNTER], int counter_sem_id, volatile int* counter, int *change);
 
 
 void count_change(int change,  int clients_money[COUNTER],
                   volatile int* counter,
                   int counter_sem_id,
-                  int barber_id);
+                  int barber_id, int waiting_barbers_mutex, volatile int* waiting_barbers_num,
+                  int waiting_barbers_queue_id, const int BARBERS, int clients_id, volatile int* debts, const int CLIENTS);
+
 void give_money_to_client(int clients_id,  const int change[COUNTER], int msgq_id);
 
 void take_money_from_client(int clients_money[COUNTER], int paid_money[COUNTER], int price);
@@ -49,17 +62,32 @@ void print_action(char* text, int barber_id);
 
 int nominals[COUNTER] = {1,2,5};
 
-
+//TODO: make client ids from 1? ----DONE----
+//TODO: make sure theres no possibility of deadlock,
+// if the last barber that is not waiting needs wait for change it sets that change as a debt of local ----DONE----
+// TODO: clean up to functions so main is tidy
 int main(int argc, char* argv[]) {
 
     srand(time(NULL));
+    char *clientPresentStr = getenv("CLIENT_PRESENT");
+    const int CLIENT_PRESENT = atoi(clientPresentStr);
+    char *clientsStr = getenv("CLIENTS");
+    const int CLIENTS = atoi(clientsStr);
+    char *barbersStr = getenv("BARBERS");
+    const int BARBERS = atoi(barbersStr);
+
+    int counter_id, wr_id, ch_id, counter_sems_id, num_clients_mutex_id, clients_id, barber_id, debts_id;
+
+    int  waiting_barbers_id, waiting_barbers_mutex, waiting_barbers_queue_id;
 
 
-    int counter_id, wr_id, ch_id, counter_sems_id, num_clients_mutex_id, clients_id, barber_id;
     barber_id = atoi(argv[1]);
     volatile int* counter;
+    volatile int* debts;
+    volatile int* waiting_barbers_num;
     volatile int* num_clients;
     struct client wr_spot;
+
 
     // counter stores [num of 1's, num of 2's, num of 5's, amount]
     counter_id = shmget(KEY_COUNTER, (COUNTER)*sizeof(int), IPC_CREAT|0600);
@@ -68,9 +96,34 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
 
+    waiting_barbers_id = shmget(NUM_WAITING_BARBERS_KEY, sizeof(int), IPC_CREAT|0600);
+    if (waiting_barbers_id == -1) {
+        perror("Create waiting barbers shared memory error");
+        exit(1);
+    }
+
+    debts_id = shmget(KEY_DEBTS, (CLIENTS)*sizeof(int), IPC_CREAT|0600);
+    if (debts_id == -1) {
+        perror("Create debts shared memory error");
+        exit(1);
+    }
+
     counter = (int*)shmat(counter_id, NULL, 0);
     if (counter == NULL) {
         perror("Attach counter error");
+        exit(1);
+    }
+
+    waiting_barbers_num = (int*)shmat(waiting_barbers_id, NULL, 0);
+    if (waiting_barbers_num == NULL) {
+        perror("Attach counter error");
+        exit(1);
+    }
+
+
+    debts = (int*)shmat(debts_id, NULL, 0);
+    if (debts == NULL) {
+        perror("Attach debts error");
         exit(1);
     }
 
@@ -83,6 +136,28 @@ int main(int argc, char* argv[]) {
         perror("Set semaphore value to number of chairs error");
         exit(1);
     }
+
+
+    waiting_barbers_mutex = semget(NUM_WAITING_BARBERS_KEY, 1, IPC_CREAT|0600);
+    if (waiting_barbers_mutex == -1) {
+        perror("Create mutex for number of reading number of waiting barbers error");
+        exit(1);
+    }
+    if (semctl(waiting_barbers_mutex, 0, SETVAL, 1) == -1){
+        perror("Set waiting_barbers_mutex mutex to 1 error");
+        exit(1);
+    }
+
+    waiting_barbers_queue_id = semget(WAITING_BARBERS_QUEUE_KEY, 1, IPC_CREAT|0600);
+    if (waiting_barbers_queue_id == -1) {
+        perror("Create queue for waiting barbers");
+        exit(1);
+    }
+    if (semctl(waiting_barbers_queue_id, 0, SETVAL, 0) == -1){
+        perror("Set waiting_barbers_queue_id mutex to 1 error");
+        exit(1);
+    }
+
 
     num_clients_mutex_id = semget(KEY_CLIENTS, 1, IPC_CREAT|0600);
     if (num_clients_mutex_id == -1) {
@@ -134,7 +209,6 @@ int main(int argc, char* argv[]) {
     }
 
 
-    // message queue
 
     while (true) {
 
@@ -153,8 +227,7 @@ int main(int argc, char* argv[]) {
         reduce(ch_id, 0);
 
 
-        int price = determine_price(wr_spot.clients_money, counter);
-//        sleep(1);
+        int price = determine_price(wr_spot.clients_money, counter, debts, wr_spot.clients_id, barber_id);
         // pick needed enough money from client
         int money_for_service[COUNTER];
         for (int i = 0; i< COUNTER; i++) money_for_service[i] = 0;
@@ -163,8 +236,9 @@ int main(int argc, char* argv[]) {
         take_money_from_client(wr_spot.clients_money, money_for_service, price);
 
         printf("Barber %d Check clients money after %d %d %d %d\n", barber_id, wr_spot.clients_money[0],wr_spot.clients_money[1],wr_spot.clients_money[2],wr_spot.clients_money[3]);
-        put_in_counter(counter, money_for_service);
+        put_in_counter(counter, money_for_service, counter_sems_id,  waiting_barbers_mutex, waiting_barbers_num, waiting_barbers_queue_id);
         cut_hair(price);
+
         // free chair
         increase(ch_id, 0);
 
@@ -182,14 +256,16 @@ int main(int argc, char* argv[]) {
 
         // count change for a client and if it cannot then wait when it will be possible
 
-
-        count_change(change_amount, wr_spot.clients_money, counter, counter_sems_id, barber_id);
+        count_change(change_amount, wr_spot.clients_money, counter,
+                     counter_sems_id, barber_id, waiting_barbers_mutex,
+                     waiting_barbers_num, waiting_barbers_queue_id, BARBERS, wr_spot.clients_id, debts, CLIENTS);
         print_action("Change counted", barber_id);
 
         give_money_to_client(wr_spot.clients_id, wr_spot.clients_money, wr_id);
         print_action("Money gave to a client", barber_id);
         int r = (rand()%DELAY)+1;
         usleep(r);
+        sleep(1);
     }
 
     return 0;
@@ -242,11 +318,19 @@ void take_money_from_client(int clients_money[COUNTER], int paid_money[COUNTER],
 
     paid_money[COUNTER-1] += (nominals[min_idx]* end_picks[min_idx]);
 
-
 }
 
-void put_in_counter(volatile int * counter, const int money_for_service[COUNTER]){
+void put_in_counter(volatile int * counter, const int money_for_service[COUNTER], int counter_sem_id, int waiting_barbers_mutex, int volatile* waiting_barbers_num, int waiting_barbers_queue_id){
+    reduce(counter_sem_id, 0);
     for (int i = 0; i<COUNTER; i++) counter[i] += money_for_service[i];
+    increase(counter_sem_id, 0);
+
+    // check if any barbers is waiting for new money in counter
+    reduce(waiting_barbers_mutex, 0);
+    if (*waiting_barbers_num > 0){
+        increase(waiting_barbers_queue_id, 0);
+    }
+    increase(waiting_barbers_mutex, 0);
 }
 
 void print_action(char* text, int barber_id){
@@ -254,10 +338,22 @@ void print_action(char* text, int barber_id){
 }
 
 
-int determine_price(const int* clients_money, const volatile int* counter){
+int determine_price(const int* clients_money, const volatile int* counter, volatile int * debts, int clients_id, int barber_id){
     int clients_amount = clients_money[COUNTER-1];
-    // when counter has no money it would create error  when rand() % (counter[COUNTER-1])
-    int price = counter[COUNTER-1] > clients_amount ?  ((rand()%clients_amount)+1) : ((rand() % (counter[COUNTER-1]+1))+1);
+    int price =  ((rand()%clients_amount)+1);
+    if (price>clients_amount) price-=1;
+    // barbershop's debt to a client
+    int client_debt = debts[clients_id-1];
+    if (client_debt>0){
+        print_action("Reducing debt", barber_id);
+        if(price>client_debt){
+            price -= client_debt;
+            debts[clients_id-1] = 0;
+        }else{
+            debts[clients_id-1] -= price;
+            price = 0;
+        }
+    }
     return price;
 }
 
@@ -299,39 +395,67 @@ bool can_change(int change_banknotes[COUNTER], int counter_sem_id, volatile int*
 }
 
 
+
 void count_change(int change,  int clients_money[COUNTER],
                   volatile int* counter,
                   int counter_sem_id,
-                  int barber_id){
+                  int barber_id, int waiting_barbers_mutex,
+                  volatile int* waiting_barbers_num, int waiting_barbers_queue_id, const int BARBERS
+                  , int clients_id, volatile int* debts, const int CLIENTS){
 
     int change_banknotes[COUNTER];
     for (int i = 0; i < COUNTER; i++) change_banknotes[i]=0;
 
     int temp_change = change;
 
-    // only one barber can perform active waiting
-    if (counter[COUNTER-1] < clients_money[COUNTER-1]
+    if (counter[COUNTER-1] < change
         || (can_change(change_banknotes, counter_sem_id, counter, &temp_change)==false)){
 
+        // check if all barbers are waiting
+        reduce(waiting_barbers_mutex, 0);
+        *waiting_barbers_num+=1;
+        if (BARBERS>CLIENTS){
+            if (*waiting_barbers_num == CLIENTS){
+                print_action("All barbers are waiting, make debt", barber_id);
+                debts[clients_id-1] = change;
+                *waiting_barbers_num-=1;
+                increase(waiting_barbers_mutex, 0);
+                return;
+            }
+        }else {
+            if (*waiting_barbers_num == BARBERS) {
+                print_action("All barbers are waiting, make debt", barber_id);
+                debts[clients_id - 1] = change;
+                *waiting_barbers_num -= 1;
+                increase(waiting_barbers_mutex, 0);
+                return;
+            }
+        }
+        increase(waiting_barbers_mutex, 0);
 
-        reduce(counter_sem_id, 1);
         temp_change = change;
-        while (counter[COUNTER-1] < clients_money[COUNTER-1] ||
+        while (counter[COUNTER-1] < change ||
                (can_change(change_banknotes, counter_sem_id, counter, &temp_change) ==  false)) {
-            //spinning
 
-            print_action("Waiting for enough money for a change", barber_id);
-            printf("First condition %d\n", counter[COUNTER-1] < clients_money[COUNTER-1] );
+            print_action("Wait for another barber to tell about new money", barber_id);
+            //wait for new money in counter
+            reduce(waiting_barbers_queue_id,0);
+
+
+
             temp_change = change;
             printf("Change amount %d\n", temp_change);
             printf("Counter %d %d %d %d\n", counter[0],counter[1],counter[2],counter[3]);
             printf("Clients money %d %d %d %d\n", clients_money[0],clients_money[1],clients_money[2],clients_money[3]);
-            printf("Second condition %d\n", (can_change(change_banknotes, counter_sem_id, counter, &temp_change) ==  false));
             sleep(1);
 
             temp_change = change;
+
         }
-        increase(counter_sem_id, 1);
+        print_action("Got money that was waiting for", barber_id);
+        reduce(waiting_barbers_mutex, 0);
+        *waiting_barbers_num-=1;
+        increase(waiting_barbers_mutex, 0);
 
     }
 

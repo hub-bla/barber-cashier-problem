@@ -12,15 +12,16 @@
 #include "fryzjerzy_semaphore_ops.h"
 
 #define COUNTER 4
+
 #define KEY_COUNTER 45281
 #define KEY_CHAIRS 45282
 #define KEY_WAITING_ROOM 45283
-#define NUM_CHAIRS 2
 #define KEY_CLIENTS 45284
-// number of clients in the waiting room
-#define NUM_CLIENTS 10
 
-#define CLIENT_PRESENT 1
+// number of clients in the waiting room
+#define NUM_CLIENTS 2
+
+
 
 
 #define DELAY 10000
@@ -36,14 +37,17 @@ void make_money(int *money, const int *nominals, int work_count);
 
 bool can_sit(int num_clients_mutex_id, volatile int* num_clients);
 
-void inform_barber(int wr_id, int* money,  int c_id);
+void inform_barber(int wr_id, int* money,  int c_id, int CLIENT_PRESENT);
 
 void wait_for_change(int wr_id, int *money,  int c_id);
 
 void print_action(char* text, int c_id);
 
-
+//TODO: make client ids from 1?
+//TODO: make sure theres no possibility of deadlock, make change bigger so it will be enough
 int main(int argc, char* argv[]){
+    char *clientPresentStr = getenv("CLIENT_PRESENT");
+    int CLIENT_PRESENT = atoi(clientPresentStr);
     srand(time(NULL));
     // [1's, 2's, 5's, amount]
     int money[COUNTER] = {0,0,0,0};
@@ -96,13 +100,14 @@ int main(int argc, char* argv[]){
             continue;
         }
 
-        inform_barber(wr_id, money, c_id);
+        inform_barber(wr_id, money, c_id, CLIENT_PRESENT);
         print_action("Barber informed", c_id);
 
         wait_for_change(wr_id, money, c_id);
         print_action("Money received", c_id);
         int r = (rand()%DELAY)+1;
         usleep(r);
+        sleep(1);
     }
     return 0;
 }
@@ -138,7 +143,7 @@ bool can_sit(int num_clients_mutex_id, volatile int* num_clients) {
 }
 
 
-void inform_barber(int wr_id, int* money, int c_id){
+void inform_barber(int wr_id, int* money, int c_id, int CLIENT_PRESENT){
     struct client arival;
     arival.mtype = CLIENT_PRESENT;
     for (int i = 0; i<COUNTER; i++) {

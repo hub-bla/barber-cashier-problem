@@ -24,6 +24,17 @@ Przedstawienie obiektów IPC użytych w problemie:
   - odpowiada za liczbę wolnych foteli
   - jeśli żaden fotel nie jest wolny to fryzjer czeka na to aż jakiś się zwolni
 
+- waiting_barbers_num(liczba oczekujących fryzjerow na wydanie reszty) - pamięć współdzielona:
+  - za jej pomocą sprawdzamy czy wszyscy aktualnie działający fryzjerzy czekają na resztę
+  - jeśli tak to ostatni oczekujący fryzjer zapisuje dług jaki salon fryzjerski ma w stosunku do obslugiwanego przez niego klienta
+  - dzięki temu unikamy zakleszczenia
+  - dług salonu wobec klienta jest zmniejszany przy jego następnym przybyciu
+  - dostęp do tej pamięci chroniony jest semaforem binarnym waiting_barber_mutex
+
+- waiting_barbers_queue_id(kolejka w oczekiwaniu na wydanie reszty) - semafor:
+  - fryzjerzy którzy oczekują na wydanie reszty oczekują na tym semaforze 
+  - gdy jakis fryzjer który na wydanie reszty nie oczekuje po w rzuceniu pieniędzy do kasy za usługę poinformuje
+    jednego oczekującego fryzjera o nowej wartosci kasy poprzez podniesienie tego semafora
 
 ### INSTRUKCJA URUCHOMIENIA
 
