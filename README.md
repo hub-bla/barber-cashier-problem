@@ -33,8 +33,8 @@ Przedstawienie obiektów IPC użytych w problemie:
 
 - waiting_barbers_queue_id(kolejka w oczekiwaniu na wydanie reszty) - semafor:
   - fryzjerzy którzy oczekują na wydanie reszty oczekują na tym semaforze 
-  - gdy jakis fryzjer który na wydanie reszty nie oczekuje po w rzuceniu pieniędzy do kasy za usługę poinformuje
-    jednego oczekującego fryzjera o nowej wartosci kasy poprzez podniesienie tego semafora
+    - gdy jakis fryzjer który na wydanie reszty nie oczekuje po w rzuceniu pieniędzy do kasy za usługę poinformuje
+      jednego oczekującego fryzjera o nowej wartosci kasy poprzez podniesienie tego semafora
 
 ### INSTRUKCJA URUCHOMIENIA
 

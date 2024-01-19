@@ -24,7 +24,7 @@
 #define NUM_CHAIRS 1
 
 // number of clients in the waiting room
-#define NUM_CLIENTS 2
+#define NUM_CLIENTS 5
 
 
 #define DELAY 10000
@@ -132,10 +132,6 @@ int main(int argc, char* argv[]) {
         perror("Create chairs shared memory error");
         exit(1);
     }
-    if (semctl(ch_id, 0, SETVAL, (int)NUM_CHAIRS) == -1){
-        perror("Set semaphore value to number of chairs error");
-        exit(1);
-    }
 
 
     waiting_barbers_mutex = semget(NUM_WAITING_BARBERS_KEY, 1, IPC_CREAT|0600);
@@ -143,18 +139,11 @@ int main(int argc, char* argv[]) {
         perror("Create mutex for number of reading number of waiting barbers error");
         exit(1);
     }
-    if (semctl(waiting_barbers_mutex, 0, SETVAL, 1) == -1){
-        perror("Set waiting_barbers_mutex mutex to 1 error");
-        exit(1);
-    }
+
 
     waiting_barbers_queue_id = semget(WAITING_BARBERS_QUEUE_KEY, 1, IPC_CREAT|0600);
     if (waiting_barbers_queue_id == -1) {
         perror("Create queue for waiting barbers");
-        exit(1);
-    }
-    if (semctl(waiting_barbers_queue_id, 0, SETVAL, 0) == -1){
-        perror("Set waiting_barbers_queue_id mutex to 1 error");
         exit(1);
     }
 
@@ -162,10 +151,6 @@ int main(int argc, char* argv[]) {
     num_clients_mutex_id = semget(KEY_CLIENTS, 1, IPC_CREAT|0600);
     if (num_clients_mutex_id == -1) {
         perror("Create mutex for number of clients in waiting room error");
-        exit(1);
-    }
-    if (semctl(num_clients_mutex_id, 0, SETVAL, 1) == -1){
-        perror("Set num_client mutex to 1 error");
         exit(1);
     }
 
@@ -191,23 +176,12 @@ int main(int argc, char* argv[]) {
     }
 
 
-    if (semctl(counter_sems_id, 0, SETVAL, 1) == -1){
-        perror("Set semaphore 1 for writing counter error");
-        exit(1);
-    }
-
-    if (semctl(counter_sems_id, 1, SETVAL, 1) == -1){
-        perror("Set semaphore 2 for reading counter error");
-        exit(1);
-    }
-
     // waiting room
     wr_id = msgget(KEY_WAITING_ROOM, IPC_CREAT|0600);
     if (wr_id == -1) {
         perror("Create waiting room error");
         exit(1);
     }
-
 
 
     while (true) {

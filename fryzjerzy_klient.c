@@ -19,7 +19,7 @@
 #define KEY_CLIENTS 45284
 
 // number of clients in the waiting room
-#define NUM_CLIENTS 2
+#define NUM_CLIENTS 5
 
 
 
@@ -70,10 +70,7 @@ int main(int argc, char* argv[]){
         perror("Create mutex for number of clients in waiting room error");
         exit(1);
     }
-    if (semctl(num_clients_mutex_id, 0, SETVAL, 1) == -1){
-        perror("Set num_client mutex to 1 error");
-        exit(1);
-    }
+
 
 
     clients_id = shmget(KEY_CLIENTS, sizeof(int), IPC_CREAT|0600);
