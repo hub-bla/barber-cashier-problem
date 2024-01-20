@@ -22,8 +22,6 @@
 #define NUM_CLIENTS 5
 
 
-
-
 #define DELAY 10000
 
 struct client {
@@ -43,8 +41,7 @@ void wait_for_change(int wr_id, int *money,  int c_id);
 
 void print_action(char* text, int c_id);
 
-//TODO: make client ids from 1?
-//TODO: make sure theres no possibility of deadlock, make change bigger so it will be enough
+
 int main(int argc, char* argv[]){
     char *clientPresentStr = getenv("CLIENT_PRESENT");
     int CLIENT_PRESENT = atoi(clientPresentStr);

@@ -20,12 +20,8 @@
 #define NUM_WAITING_BARBERS_KEY 46271
 #define WAITING_BARBERS_QUEUE_KEY  47271
 
-
-#define NUM_CHAIRS 1
-
 // number of clients in the waiting room
 #define NUM_CLIENTS 5
-
 
 #define DELAY 10000
 
@@ -45,6 +41,7 @@ int determine_price(const int* clients_money, const volatile int* counter, volat
 void cut_hair(int price);
 void put_in_counter(volatile int * counter, const int money_for_service[COUNTER], int counter_sem_id,
                     int waiting_barbers_mutex, int volatile *waiting_barbers_num, int waiting_barbers_queue_id);
+
 bool can_change(int change_banknotes[COUNTER], int counter_sem_id, volatile int* counter, int *change);
 
 

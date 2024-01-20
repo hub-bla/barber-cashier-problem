@@ -1,8 +1,7 @@
-#ipcrm --all
-
 # Assuming CLIENTS is initially set to 2
 export CLIENTS=5
-export BARBERS=0
+export BARBERS=10
+
 # Calculate CLIENT_PRESENT as CLIENTS + 1 // one more so the clients has id from 1 to Clients
 CLIENT_PRESENT=$((CLIENTS + 1))
 
