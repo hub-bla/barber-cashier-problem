@@ -1,45 +1,38 @@
-# Śpiący fryzjerzy-kasjerzy
+# Sleeping Barber-Cashiers
+The project that was made for the System and Concurrent Programming class at Poznan University of Technology.
 
-### SPOSÓB ROZWIĄZANIA PROBLEMU
-
-Przedstawienie obiektów IPC użytych w problemie:
-
-- counter(kasa)-pamięć współdzielona: 
-  - jest to lista 4 elementowa, w której na 3 pierwszych miejscach znajduję się liczba odpowiednich banknotów. Na ostatnim miejscu znajduje się łączna suma pieniędzy w kasie.
-
-  - do mechanizmu kasy dodatkowo używane są 2 semafory, jeden do odczytu, drugi do zapisu
+## Solution Overview
 
 
-- wr(poczekalnia) - kolejka komunikatów:
-  - klient wysyła za pomocą niej swoje pieniądze oraz swój identyfikator
+This solution addresses the Sleeping Barber-Cashiers problem using Inter-Process Communication (IPC) objects. The key IPC objects used are:
 
-  - fryzjer dzięki niej bierze klienta na fotel i później przy jej użyciu oraz wiadomości odebranej wysyla wiadomość o zakończeniu usługi to odpowiedniego klienta, wraz z tą wiadomością, zwracane są pozostałe pieniądze klienta wraz z resztą za usługę
+1. **Counter (Cash Register) - Shared Memory:**
+   - A 4-element list representing the number of banknotes for different denominations and the total cash in the register.
+   - One semaphore is employed for reading/writing to the cash register.
 
-- num_clients(liczba osób w poczekalni)-pamięć współdzielona:
-  - wartość tę inkrementuje klient gdy siada w poczekalni   natomiast dekrementuje ją fryzjer gdy bierze klienta z poczekalni na fotel
+2. **Waiting Room (WR) - Message Queue:**
+   - Clients use the message queue to send their money and identifiers.
+   - The barber utilizes it to notify the client about the completion of the service and return the remaining money.
 
-  - dostęp do num_clients jest synchronizowany przy użyciu semafora binarnego - num_clients_mutex
+3. **Number of spots in waiting room (spots_in_wr) - Shared Memory:**
+   - Tracks the number of people in the waiting room.
+   - Synchronized access using a binary semaphore (`spots_in_wr_mutex`).
 
-- ch(fotele)-semafor:
-  - odpowiada za liczbę wolnych foteli
-  - jeśli żaden fotel nie jest wolny to fryzjer czeka na to aż jakiś się zwolni
+4. **Chairs (ch) - Semaphore:**
+   - Manages the number of available chairs in the waiting room.
+   - The barber waits if no chair is available.
 
-- waiting_barbers_num(liczba oczekujących fryzjerow na wydanie reszty) - pamięć współdzielona:
-  - za jej pomocą sprawdzamy czy wszyscy aktualnie działający fryzjerzy czekają na resztę
-  - jeśli tak to ostatni oczekujący fryzjer zapisuje dług jaki salon fryzjerski ma w stosunku do obslugiwanego przez niego klienta
-  - dzięki temu unikamy zakleszczenia
-  - dług salonu wobec klienta jest zmniejszany przy jego następnym przybyciu
-  - dostęp do tej pamięci chroniony jest semaforem binarnym waiting_barber_mutex
+5. **Waiting Barbers (waiting_barbers_num) - Shared Memory:**
+   - Helps avoid deadlocks by signaling if all working barbers are waiting for change.
+   - If all barbers are waiting then the last barber coming to waiting queue makes a debt that the salon is obligated to reduce every time the client that could get change come.
+     Thus, the barber that would normally wait for new money in the counter can work again. The debt that the salon has for every client is track with shared memery array where every index
+     corresponds to the client's ids. This means it doesn't require any locks beacuse every barber can handle one client at the time so there are no data races to the same place in the array.
+   - Access protected by a binary semaphore (`waiting_barber_mutex`).
 
-- waiting_barbers_queue_id(kolejka w oczekiwaniu na wydanie reszty) - semafor:
-  - fryzjerzy którzy oczekują na wydanie reszty oczekują na tym semaforze 
-    - gdy jakis fryzjer który na wydanie reszty nie oczekuje po w rzuceniu pieniędzy do kasy za usługę poinformuje
-      jednego oczekującego fryzjera o nowej wartosci kasy poprzez podniesienie tego semafora
+6. **Waiting Barbers Queue (waiting_barbers_queue_id) - Semaphore:**
+   - Barbers waiting for change use this semaphore.
+   - A barber not waiting for change notifies one waiting barber about the new cash value.
 
-### INSTRUKCJA URUCHOMIENIA
+## Usage
+ - Run the following command `./make.sh <NUMBER OF CLIENTS> <NUMBER OF BARBERS> <WAITING ROOM SPOTS>`
 
- - Plik "make.sh" usuwa istniejące obiekty ipc, kompiluje kody i uruchamia kod programu "main".
-
- - Plik "main" umożliwia uruchomienie wielu klientów i fryzjerów wraz z ustawieniem początkowej wartości pieniędzy w kasie salonu.
-
- - W pliku "klient" oraz "fryzjer" należy ustawić te samą wartość dla NUM_CLIENTS, określa ona wielkość poczekalni.
