@@ -1,17 +1,21 @@
-# Assuming CLIENTS is initially set to 2
-export CLIENTS=5
-export BARBERS=10
+#!/bin/bash
 
+# Check if the number of arguments is less than 2
+if [ "$#" -lt 2 ]; then
+  echo "Usage: $0 <CLIENTS> <BARBERS> <WAITING ROOM SPOTS>"
+  exit 1
+fi
+
+export CLIENTS="$1"
+export BARBERS="$2"
+export SPOTS="$3"
 # Calculate CLIENT_PRESENT as CLIENTS + 1 // one more so the clients has id from 1 to Clients
 CLIENT_PRESENT=$((CLIENTS + 1))
 
-# Export CLIENT_PRESENT as an environment variable
 export CLIENT_PRESENT
 
-
-cc -Wall fryzjerzy_fryzjer.c fryzjerzy_semaphore_ops.h  fryzjerzy_semaphore_ops.c -o fryzjer
-cc -Wall fryzjerzy_klient.c fryzjerzy_semaphore_ops.h  fryzjerzy_semaphore_ops.c  -o klient
-cc -Wall fryzjerzy_main.c -o main
-
+cc -Wall barber.c semaphore_ops.h  semaphore_ops.c -o barber
+cc -Wall client.c semaphore_ops.h  semaphore_ops.c  -o client
+cc -Wall main.c -o main
 
 ./main

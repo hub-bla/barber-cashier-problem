@@ -6,12 +6,15 @@
 #include <sys/sem.h>
 #include <stdlib.h>
 
+#define BARBER_EXEC "./barber"
+#define CLIENT_EXEC "./client"
+
 #define COUNTER 4
 
 #define KEY_COUNTER 45281
 #define KEY_CHAIRS 45282
 #define KEY_WAITING_ROOM 45283
-#define KEY_CLIENTS 45284
+#define KEY_SPOTS 45284
 #define KEY_CHANGE_QUEUE 46283
 #define KEY_DEBTS 45321
 #define NUM_WAITING_BARBERS_KEY 46271
@@ -37,7 +40,10 @@ int main(int argc, char* argv[]) {
     char *barbersStr = getenv("BARBERS");
     int BARBERS = atoi(barbersStr);
 
-    int counter_id, wr_id, ch_id, counter_sems_id, num_clients_mutex_id, clients_id, barber_id, debts_id;
+    char *spotsStr = getenv("SPOTS");
+    int SPOTS = atoi(spotsStr);
+
+    int counter_id, wr_id, ch_id, counter_sems_id, spots_in_wr_mutex, spots_in_wr_id, debts_id;
 
     int  waiting_barbers_id, waiting_barbers_mutex, waiting_barbers_queue_id;
 
@@ -45,7 +51,7 @@ int main(int argc, char* argv[]) {
     volatile int* counter;
     volatile int* debts;
     volatile int* waiting_barbers_num;
-    volatile int* num_clients;
+    volatile int* spots_in_wr;
 
     counter_id = shmget(KEY_COUNTER, (COUNTER)*sizeof(int), IPC_CREAT|0600);
     if (counter_id == -1) {
@@ -129,33 +135,33 @@ int main(int argc, char* argv[]) {
     }
 
 
-    num_clients_mutex_id = semget(KEY_CLIENTS, 1, IPC_CREAT|0600);
+    spots_in_wr_mutex = semget(KEY_SPOTS, 1, IPC_CREAT|0600);
 
-    if (num_clients_mutex_id == -1) {
+    if (spots_in_wr_mutex == -1) {
         perror("Create mutex for number of clients in waiting room error");
         exit(1);
     }
 
-    if (semctl(num_clients_mutex_id, 0, SETVAL, 1) == -1){
+    if (semctl(spots_in_wr_mutex, 0, SETVAL, 1) == -1){
         perror("Set num_client mutex to 1 error");
         exit(1);
     }
 
 
-    clients_id = shmget(KEY_CLIENTS, sizeof(int), IPC_CREAT|0600);
-    if (clients_id == -1) {
+    spots_in_wr_id = shmget(KEY_SPOTS, sizeof(int), IPC_CREAT|0600);
+    if (spots_in_wr_id == -1) {
         perror("Create number of clients shared memory error");
         exit(1);
     }
 
 
-    num_clients = (int*)shmat(clients_id, NULL, 0);
-    if (num_clients == NULL) {
+    spots_in_wr = (int*)shmat(spots_in_wr_id, NULL, 0);
+    if (spots_in_wr == NULL) {
         perror("Attach counter error");
         exit(1);
     }
 
-    *num_clients = 0;
+    *spots_in_wr = SPOTS;
 
     counter_sems_id = semget(KEY_COUNTER, 2, IPC_CREAT|0600);
     if (counter_sems_id == -1) {
@@ -194,7 +200,7 @@ int main(int argc, char* argv[]) {
             printf("Make barber\n");
             char id[10];
             sprintf(id, "%d", i);
-            execlp("./fryzjer", "./fryzjer", id, NULL);
+            execlp(BARBER_EXEC, BARBER_EXEC, id, NULL);
             printf("Make barber error\n");
         }
     }
@@ -204,7 +210,7 @@ int main(int argc, char* argv[]) {
             printf("Make client\n");
             char id[10];
             sprintf(id, "%d", i);
-            execlp("./klient", "./klient", id,NULL);
+            execlp(CLIENT_EXEC, CLIENT_EXEC, id,NULL);
             printf("Make client error\n");
         }
     }
