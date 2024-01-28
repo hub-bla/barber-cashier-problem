@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/msg.h>
@@ -8,7 +7,6 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <time.h>
-#include <stdlib.h>
 #include "fryzjerzy_semaphore_ops.h"
 
 #define COUNTER 4

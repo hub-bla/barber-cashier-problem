@@ -59,10 +59,6 @@ void print_action(char* text, int barber_id);
 
 int nominals[COUNTER] = {1,2,5};
 
-//TODO: make client ids from 1? ----DONE----
-//TODO: make sure theres no possibility of deadlock,
-// if the last barber that is not waiting needs wait for change it sets that change as a debt of local ----DONE----
-// TODO: clean up to functions so main is tidy
 int main(int argc, char* argv[]) {
 
     srand(time(NULL));
